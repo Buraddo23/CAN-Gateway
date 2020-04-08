@@ -8,12 +8,15 @@
 #include <linux/can/raw.h>*/
 
 #include "interface_manager.h"
+#include "interface_monitor.h"
 
 int main(void) {
 	vcan_init();
 	vcan_create("vcan0");
 	can_config("can0", "250000");
 	canfd_config("can0", "250000", "400000");
+	
+	read_can("vcan0");
 	
 	return 0;
 }
