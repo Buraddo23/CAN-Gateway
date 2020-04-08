@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -23,6 +23,8 @@ void read_can(char *name) {
 	
 	th_err = pthread_create(&read_thread, NULL, monitor_can, &s0);
 	printf("pthread return %d \n", th_err);
+	
+	pthread_join(read_thread, NULL);
 }
 
 int configure_can(char *name) {
@@ -36,7 +38,7 @@ int configure_can(char *name) {
     s0=socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
     //CAN0 interface set up
-    strcpy(ifr0.ifr_name, name);
+    strcpy(ifr0.ifr_name, "vcan0");
     ioctl(s0, SIOCGIFINDEX, &ifr0);
     addr0.can_family = AF_CAN;
     addr0.can_ifindex = ifr0.ifr_ifindex;
@@ -62,4 +64,4 @@ void *monitor_can(void *ptr) {
         for (int i = 0; i < myFrameRec.can_dlc; i++)
             printf("%02X ", myFrameRec.data[i]);
     }
-}
+}*/

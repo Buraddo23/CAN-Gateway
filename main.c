@@ -17,6 +17,9 @@ int main(void) {
 	canfd_config("can0", "250000", "400000");
 	
 	read_can("vcan0");
+	read_can("vcan1");
+	
+	while(1);
 	
 	return 0;
 }
@@ -57,42 +60,5 @@ int main() {
         bytes_wr=write(s0,&myFrame,sizeof(myFrame));
         printf("bytes_wr: %d \n", bytes_wr);
         sleep(1);
-    }
-}*/
-/*int main()
-{
-    int s0,i,nbytes_rd;
-                 
-    struct sockaddr_can addr0;
-    struct ifreq ifr0;
-    struct can_frame myFrameRec;         
-    char fl_bind;
-    char bytes_wr;
-
-    // system("sudo ip link set can0 down");
-    // sleep(1);// sec
-    // system("sudo ip link set can0 up type can bitrate 500000");
-    // printf("sudo ip link set can0 up type can bitrate 500000 \n");
-    // sleep(1); 
-
-    s0=socket(PF_CAN, SOCK_RAW, CAN_RAW);
-
-    //CAN0 interface set up
-    strcpy(ifr0.ifr_name, "vcan0");
-    ioctl(s0, SIOCGIFINDEX, &ifr0);
-    addr0.can_family = AF_CAN;
-    addr0.can_ifindex = ifr0.ifr_ifindex;
-    fl_bind=bind(s0,(struct sockaddr*)&addr0, sizeof(addr0));
-    if(fl_bind==0){printf("bind ok\n");}
-
-    // infinite loop
-    while(1) {  
-        nbytes_rd = read(s0, &myFrameRec, sizeof(struct can_frame));
-                        
-        printf("\n nbytes_rd:%d  ",nbytes_rd );
-        printf("can_id:%02X  ", myFrameRec.can_id);
-        printf("can_dlc:%02X  data:  ", myFrameRec.can_dlc);
-        for (i = 0; i < myFrameRec.can_dlc; i++)
-            printf("%02X ", myFrameRec.data[i]);
     }
 }*/
