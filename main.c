@@ -1,11 +1,21 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <linux/can/raw.h>
+#include <linux/can/raw.h>*/
+
+#include "interface_manager.h"
+
+int main(void) {
+	vcan_init();
+	vcan_create("vcan0");
+	
+	return 0;
+}
+
 /*
 int main() {
     int s0,i;
@@ -44,7 +54,7 @@ int main() {
         sleep(1);
     }
 }*/
-int main()
+/*int main()
 {
     int s0,i,nbytes_rd;
                  
@@ -80,4 +90,4 @@ int main()
         for (i = 0; i < myFrameRec.can_dlc; i++)
             printf("%02X ", myFrameRec.data[i]);
     }
-}
+}*/
