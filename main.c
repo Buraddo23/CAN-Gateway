@@ -12,6 +12,8 @@
 int main(void) {
 	vcan_init();
 	vcan_create("vcan0");
+	can_config("can0", "250000");
+	canfd_config("can0", "250000", "400000");
 	
 	return 0;
 }
