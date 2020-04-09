@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <pthread.h>
 
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -12,18 +11,12 @@
 
 int configure_can(char *name);
 struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data);
-void *monitor_can(void *ptr);
+void monitor_can(int socket);
 
-void read_can(char *name) {
-	pthread_t read_thread;
-	int th_err;
-
-	int s0 = configure_can(name);
+void *read_can(void *arg) {
+	int s0 = configure_can((char*) arg);
 	
-	printf("s0 %d \n", s0);
-	
-	th_err = pthread_create(&read_thread, NULL, monitor_can, &s0);
-	printf("pthread return %d \n", th_err);
+	monitor_can(s0);
 }
 
 void write_can(char *name) {
@@ -74,15 +67,12 @@ struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data) {
     return myFrame;  
 }
 
-void *monitor_can(void *ptr) {
-	int s0, nbytes_rd;
+void monitor_can(int socket) {
+	int nbytes_rd;
 	struct can_frame myFrameRec;
-	
-	s0 = *(int *)ptr;
 
-	while(1) { 
-		//printf("s0 %d \n", s0);}
-        nbytes_rd = read(s0, &myFrameRec, sizeof(struct can_frame));
+	while(1) {
+        nbytes_rd = read(socket, &myFrameRec, sizeof(struct can_frame));
                         
         printf("\n nbytes_rd:%d  ",nbytes_rd );
         printf("can_id:%02X  ", myFrameRec.can_id);

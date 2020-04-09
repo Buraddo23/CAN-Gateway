@@ -1,25 +1,23 @@
-/*#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <linux/can/raw.h>*/
+#include <pthread.h>
 
 #include "interface_manager.h"
 #include "routing_rules.h"
 
 int main(void) {
+	pthread_t read_thread;
+	int th_err;
+
 	//vcan_init();
 	//vcan_create("vcan0");
 	//vcan_create("vcan1");
 	//can_config("can0", "250000");
 	//canfd_config("can0", "250000", "400000");
 	
+	th_err = pthread_create(&read_thread, NULL, read_can, (void *)"vcan0");
+	
 	//read_can("vcan0");
 	//read_can("vcan1");
-	write_can("vcan0");
+	//write_can("vcan0");
 	
 	while(1);
 	
