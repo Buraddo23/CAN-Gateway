@@ -12,16 +12,11 @@ void vcan_init() {
 void vcan_create(char *name) {
 	char cmd[100];
 	
-	strcpy(cmd, "sudo ip link add ");
-	strcat(cmd, name);
-	strcat(cmd, " type vcan");
-	
+	sprintf(cmd, "sudo ip link add %s type vcan", name);
 	system(cmd);
 	printf("%s \n", cmd);
 	
-	strcpy(cmd, "sudo ip link set up ");
-	strcat(cmd, name);
-	
+	sprintf(cmd, "sudo ip link set up %s", name);
 	system(cmd);
 	printf("%s \n", cmd);
 }
@@ -29,11 +24,7 @@ void vcan_create(char *name) {
 void can_config(char *name, char *bitrate) {
 	char cmd[100];
 	
-	strcpy(cmd, "sudo ip link set ");
-	strcat(cmd, name);
-	strcat(cmd, " type can up bitrate ");
-	strcat(cmd, bitrate);
-	
+	sprintf(cmd, "sudo ip link set %s type can up bitrate %s", name, bitrate);
 	system(cmd);
 	printf("%s \n", cmd);
 }
@@ -41,14 +32,7 @@ void can_config(char *name, char *bitrate) {
 void canfd_config(char *name, char *bitrate, char *dbitrate) {
 	char cmd[100];
 	
-	strcpy(cmd, "sudo ip link set ");
-	strcat(cmd, name);
-	strcat(cmd, " type can up bitrate ");
-	strcat(cmd, bitrate);
-	strcat(cmd, " dbitrate ");
-	strcat(cmd, dbitrate);
-	strcat(cmd, " fd on");
-	
+	sprintf(cmd, "sudo ip link set %s type can up bitrate %s dbitrate %s fd on", name, bitrate, dbitrate);
 	system(cmd);
 	printf("%s \n", cmd);
 }

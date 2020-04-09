@@ -1,5 +1,3 @@
-#include <pthread.h>
-
 #include "interface_manager.h"
 #include "routing_rules.h"
 
