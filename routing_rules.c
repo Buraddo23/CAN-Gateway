@@ -18,20 +18,25 @@ int active_rules[MAX_RULES];
 
 struct monitor_data {
 	int src_id, dst_id, rule_id;
-	char *src_name, *dst_name, *filter;
+	char *src_name, *dst_name;
+	struct id_filter filter;
 };
 
-int configure_can(char *name);
-void *monitor_can(void *args);
+int configure_can(char*);
+void *monitor_can(void*);
 
-int add_rule_filter(char *src, char *dst, char *filter) {
+
+int add_rule_filter(char *src, char *dst, struct id_filter filter) {
 	int rule_id = 0;
 	while (active_rules[rule_id]) rule_id++;
 	active_rules[rule_id] = 1;
-	if(filter != NULL)
-		sprintf(list_of_rules[rule_id], "s:%s d:%s f:%s", src, dst, filter);
-	else
+	if (filter.is_match == -1) {
 		sprintf(list_of_rules[rule_id], "s:%s d:%s", src, dst);
+	} else {
+		char sf[17];
+		sprintf(sf, "%03X%c%03X", filter.id, filter.is_match ? ':' : '~', filter.mask);
+		sprintf(list_of_rules[rule_id], "s:%s d:%s f:%s", src, dst, sf);
+	}
 	
 	int socket_src = configure_can(src);
 	int socket_dst = configure_can(dst);
@@ -49,7 +54,9 @@ int add_rule_filter(char *src, char *dst, char *filter) {
 }
 
 int add_rule(char *src, char *dst) {
-	add_rule_filter(src, dst, NULL);
+	struct id_filter f;
+	f.is_match = -1;
+	add_rule_filter(src, dst, f);
 }
 
 void list_rules() {
@@ -66,6 +73,7 @@ void flush_rules() {
 	for (int i = 0; i < MAX_RULES; ++i)
 		active_rules[i] = 0;
 }
+
 
 int configure_can(char *name) {                 
     struct sockaddr_can addr0;
@@ -86,18 +94,29 @@ int configure_can(char *name) {
 }
 
 void *monitor_can(void *args) {
-	struct monitor_data *data = args;
 	int nbytes_rd;
+	char sf[17];
+	struct monitor_data *data = args;
+	struct id_filter filter = data->filter;
 	struct can_frame myFrame;
+		
+	sprintf(sf, "%03X%c%03X", filter.id, filter.is_match ? ':' : '~', filter.mask);
 
 	while (active_rules[data->rule_id]) {
         nbytes_rd = read(data->src_id, &myFrame, sizeof(myFrame));
         
-        printf("\n%d bytes: %s->%s", nbytes_rd, data->src_name, data->dst_name);
-        printf("\t%03X\t%02X\t", myFrame.can_id, myFrame.can_dlc);
-        for (int i = 0; i < myFrame.can_dlc; i++)
-            printf("%02X ", myFrame.data[i]);
-        
-        write(data->dst_id, &myFrame, sizeof(myFrame));
+        if ((filter.is_match == -1) || //No filter
+		    (filter.is_match == 1) && ((filter.id & filter.mask) == (myFrame.can_id & filter.mask)) || //Equal filter
+		    (filter.is_match == 0) && ((filter.id & filter.mask) != (myFrame.can_id & filter.mask))) { //Not equal filter
+		    printf("\nRedirected\t\t%d bytes: %s->%s\t%03X\t%02X\t", nbytes_rd, data->src_name, data->dst_name, myFrame.can_id, myFrame.can_dlc);
+		    for (int i = 0; i < myFrame.can_dlc; i++)
+		        printf("%02X ", myFrame.data[i]);
+		    
+		    write(data->dst_id, &myFrame, sizeof(myFrame));
+        } else {
+        	printf("\nBlocked by %s\t%d bytes: %s->%s\t%03X\t%02X\t", sf, nbytes_rd, data->src_name, data->dst_name, myFrame.can_id, myFrame.can_dlc);
+		    for (int i = 0; i < myFrame.can_dlc; i++)
+		        printf("%02X ", myFrame.data[i]);
+        }
     }
 }
