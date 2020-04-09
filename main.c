@@ -4,9 +4,6 @@
 #include "routing_rules.h"
 
 int main(void) {
-	pthread_t read_thread;
-	int th_err;
-
 	//vcan_init();
 	//vcan_create("vcan0");
 	//vcan_create("vcan1");

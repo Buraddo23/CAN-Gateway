@@ -2,8 +2,8 @@
 #define INTERFACE_MANAGER_H
 
 void vcan_init();
-void vcan_create(char *name);
-void can_config(char *name, char *bitrate);
-void canfd_config(char *name, char *bitrate, char *dbitrate);
+void vcan_create(char *);
+void can_config(char *, char *);
+void canfd_config(char *, char *, char *);
 
 #endif //INTERFACE_MANAGER_H

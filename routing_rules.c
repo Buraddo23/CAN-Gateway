@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -10,49 +11,31 @@
 #include "routing_rules.h"
 
 struct monitor_data {
-	int socket_id;
-	int rule_id;
+	int src_id, dst_id, rule_id;
+	char *src_name, *dst_name;
 };
 
 int configure_can(char *name);
-struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data);
-void monitor_can(int socket);
+void *monitor_can(void *args);
 
 int add_rule(char *src, char *dst) {
-	int i = 0;
-	while(active_rules[i]) i++;
-	active_rules[i] = 1;
-
-	sprintf(list_of_rules[i], "source: %s; destination: %s", src, dst);
-	printf("%s \n", list_of_rules[i]);
+	int rule_id = 0;
+	while(active_rules[rule_id]) rule_id++;
+	active_rules[rule_id] = 1;
+	sprintf(list_of_rules[rule_id], "source: %s; destination: %s", src, dst);
+	printf("%s \n", list_of_rules[rule_id]);
 	
 	int socket_src = configure_can(src);
 	int socket_dst = configure_can(dst);
 	
-	
-}
-
-void *read_can(void *arg) {
-	int s0 = configure_can((char*) arg);
-	
-	monitor_can(s0);
-}
-
-void write_can(char *name) {
-    int s0 = configure_can(name);
-
-	unsigned char a[8];
-	for (int i = 0; i < 8; ++i) {
-		a[i] = 0xAA;
-	}
-
-    struct can_frame myFrame = gen_frame(0x10, 8, a);    
-	
-    while(1) {
-        char bytes_wr=write(s0,&myFrame,sizeof(myFrame));
-        printf("bytes_wr: %d \n", bytes_wr);
-        sleep(1);
-    }
+	pthread_t monitor_thread;
+	struct monitor_data *mon_args = malloc(sizeof *mon_args);
+	mon_args->src_id   = socket_src;
+	mon_args->dst_id   = socket_dst;
+	mon_args->rule_id  = rule_id;
+	mon_args->src_name = src;
+	mon_args->dst_name = dst;
+	int th_err = pthread_create(&monitor_thread, NULL, monitor_can, (void *)mon_args);
 }
 
 int configure_can(char *name) {
@@ -76,27 +59,19 @@ int configure_can(char *name) {
     return s0;
 }
 
-struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data) {
-	struct can_frame myFrame;    	     
-    
-    myFrame.can_id  = id;
-    myFrame.can_dlc = dlc; 
-    memcpy(myFrame.data, data, dlc*sizeof(unsigned char));
-        
-    return myFrame;  
-}
-
-void monitor_can(int socket) {
+void *monitor_can(void *args) {
+	struct monitor_data *data = args;
 	int nbytes_rd;
-	struct can_frame myFrameRec;
+	struct can_frame myFrame;
 
-	while(1) {
-        nbytes_rd = read(socket, &myFrameRec, sizeof(struct can_frame));
-                        
-        printf("\n nbytes_rd:%d  ",nbytes_rd );
-        printf("can_id:%02X  ", myFrameRec.can_id);
-        printf("can_dlc:%02X  data:  ", myFrameRec.can_dlc);
-        for (int i = 0; i < myFrameRec.can_dlc; i++)
-            printf("%02X ", myFrameRec.data[i]);
+	while(active_rules[data->rule_id]) {
+        nbytes_rd = read(data->src_id, &myFrame, sizeof(myFrame));
+        
+        printf("\n%d bytes: %s -> %s", nbytes_rd, data->src_name, data->dst_name);
+        printf("\t%03X\t%02X\t", myFrame.can_id, myFrame.can_dlc);
+        for (int i = 0; i < myFrame.can_dlc; i++)
+            printf("%02X ", myFrame.data[i]);
+        
+        write(data->dst_id, &myFrame, sizeof(myFrame));
     }
 }

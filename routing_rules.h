@@ -7,9 +7,6 @@
 char list_of_rules[MAX_RULES][MAX_STRING_SIZE];
 int active_rules[MAX_RULES];
 
-int add_rule(char *src, char *dst);
-
-void *read_can(void *arg);
-void write_can(char *name);
+int add_rule(char *, char *);
 
 #endif //ROUTING_RULES_H
