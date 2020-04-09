@@ -1,4 +1,4 @@
-/*#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -8,9 +8,10 @@
 #include <net/if.h>
 #include <linux/can/raw.h>
 
-#include "interface_monitor.h"
+#include "routing_rules.h"
 
 int configure_can(char *name);
+struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data);
 void *monitor_can(void *ptr);
 
 void read_can(char *name) {
@@ -23,8 +24,23 @@ void read_can(char *name) {
 	
 	th_err = pthread_create(&read_thread, NULL, monitor_can, &s0);
 	printf("pthread return %d \n", th_err);
+}
+
+void write_can(char *name) {
+    int s0 = configure_can(name);
+
+	unsigned char a[8];
+	for (int i = 0; i < 8; ++i) {
+		a[i] = 0xAA;
+	}
+
+    struct can_frame myFrame = gen_frame(0x10, 8, a);    
 	
-	pthread_join(read_thread, NULL);
+    while(1) {
+        char bytes_wr=write(s0,&myFrame,sizeof(myFrame));
+        printf("bytes_wr: %d \n", bytes_wr);
+        sleep(1);
+    }
 }
 
 int configure_can(char *name) {
@@ -38,7 +54,7 @@ int configure_can(char *name) {
     s0=socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
     //CAN0 interface set up
-    strcpy(ifr0.ifr_name, "vcan0");
+    strcpy(ifr0.ifr_name, name);
     ioctl(s0, SIOCGIFINDEX, &ifr0);
     addr0.can_family = AF_CAN;
     addr0.can_ifindex = ifr0.ifr_ifindex;
@@ -46,6 +62,16 @@ int configure_can(char *name) {
     if(fl_bind==0){printf("bind ok\n");}
     
     return s0;
+}
+
+struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data) {
+	struct can_frame myFrame;    	     
+    
+    myFrame.can_id  = id;
+    myFrame.can_dlc = dlc; 
+    memcpy(myFrame.data, data, dlc*sizeof(unsigned char));
+        
+    return myFrame;  
 }
 
 void *monitor_can(void *ptr) {
@@ -64,4 +90,4 @@ void *monitor_can(void *ptr) {
         for (int i = 0; i < myFrameRec.can_dlc; i++)
             printf("%02X ", myFrameRec.data[i]);
     }
-}*/
+}

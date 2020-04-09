@@ -5,7 +5,7 @@
 #include "interface_manager.h"
 
 void vcan_init() {
-	//system("sudo modprobe vcan");
+	system("sudo modprobe vcan");
 	printf("sudo modprobe vcan \n");
 }
 
@@ -16,13 +16,13 @@ void vcan_create(char *name) {
 	strcat(cmd, name);
 	strcat(cmd, " type vcan");
 	
-	//system(cmd);
+	system(cmd);
 	printf("%s \n", cmd);
 	
 	strcpy(cmd, "sudo ip link set up ");
 	strcat(cmd, name);
 	
-	//system(cmd);
+	system(cmd);
 	printf("%s \n", cmd);
 }
 
@@ -34,7 +34,7 @@ void can_config(char *name, char *bitrate) {
 	strcat(cmd, " type can up bitrate ");
 	strcat(cmd, bitrate);
 	
-	//system(cmd);
+	system(cmd);
 	printf("%s \n", cmd);
 }
 
@@ -49,6 +49,6 @@ void canfd_config(char *name, char *bitrate, char *dbitrate) {
 	strcat(cmd, dbitrate);
 	strcat(cmd, " fd on");
 	
-	//system(cmd);
+	system(cmd);
 	printf("%s \n", cmd);
 }

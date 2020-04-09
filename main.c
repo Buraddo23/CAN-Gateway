@@ -8,16 +8,18 @@
 #include <linux/can/raw.h>*/
 
 #include "interface_manager.h"
-#include "interface_monitor.h"
+#include "routing_rules.h"
 
 int main(void) {
-	vcan_init();
-	vcan_create("vcan0");
-	can_config("can0", "250000");
-	canfd_config("can0", "250000", "400000");
+	//vcan_init();
+	//vcan_create("vcan0");
+	//vcan_create("vcan1");
+	//can_config("can0", "250000");
+	//canfd_config("can0", "250000", "400000");
 	
-	read_can("vcan0");
-	read_can("vcan1");
+	//read_can("vcan0");
+	//read_can("vcan1");
+	write_can("vcan0");
 	
 	while(1);
 	
