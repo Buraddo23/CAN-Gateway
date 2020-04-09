@@ -9,9 +9,28 @@
 
 #include "routing_rules.h"
 
+struct monitor_data {
+	int socket_id;
+	int rule_id;
+};
+
 int configure_can(char *name);
 struct can_frame gen_frame(int id, unsigned char dlc, unsigned char *data);
 void monitor_can(int socket);
+
+int add_rule(char *src, char *dst) {
+	int i = 0;
+	while(active_rules[i]) i++;
+	active_rules[i] = 1;
+
+	sprintf(list_of_rules[i], "source: %s; destination: %s", src, dst);
+	printf("%s \n", list_of_rules[i]);
+	
+	int socket_src = configure_can(src);
+	int socket_dst = configure_can(dst);
+	
+	
+}
 
 void *read_can(void *arg) {
 	int s0 = configure_can((char*) arg);

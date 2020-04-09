@@ -13,11 +13,13 @@ int main(void) {
 	//can_config("can0", "250000");
 	//canfd_config("can0", "250000", "400000");
 	
-	th_err = pthread_create(&read_thread, NULL, read_can, (void *)"vcan0");
+	//th_err = pthread_create(&read_thread, NULL, read_can, (void *)"vcan0");
 	
 	//read_can("vcan0");
 	//read_can("vcan1");
 	//write_can("vcan0");
+	
+	add_rule("vcan0", "vcan1");
 	
 	while(1);
 	
