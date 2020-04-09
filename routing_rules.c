@@ -10,20 +10,28 @@
 
 #include "routing_rules.h"
 
+#define MAX_RULES 64
+#define MAX_STRING_SIZE 64
+
+char list_of_rules[MAX_RULES][MAX_STRING_SIZE];
+int active_rules[MAX_RULES];
+
 struct monitor_data {
 	int src_id, dst_id, rule_id;
-	char *src_name, *dst_name;
+	char *src_name, *dst_name, *filter;
 };
 
 int configure_can(char *name);
 void *monitor_can(void *args);
 
-int add_rule(char *src, char *dst) {
+int add_rule_filter(char *src, char *dst, char *filter) {
 	int rule_id = 0;
 	while (active_rules[rule_id]) rule_id++;
 	active_rules[rule_id] = 1;
-	sprintf(list_of_rules[rule_id], "source: %s; destination: %s", src, dst);
-	printf("%s \n", list_of_rules[rule_id]);
+	if(filter != NULL)
+		sprintf(list_of_rules[rule_id], "s:%s d:%s f:%s", src, dst, filter);
+	else
+		sprintf(list_of_rules[rule_id], "s:%s d:%s", src, dst);
 	
 	int socket_src = configure_can(src);
 	int socket_dst = configure_can(dst);
@@ -35,8 +43,28 @@ int add_rule(char *src, char *dst) {
 	mon_args->rule_id  = rule_id;
 	mon_args->src_name = src;
 	mon_args->dst_name = dst;
+	mon_args->filter   = filter;
 	if (pthread_create(&monitor_thread, NULL, monitor_can, (void *)mon_args))
 		printf("Thread error");
+}
+
+int add_rule(char *src, char *dst) {
+	add_rule_filter(src, dst, NULL);
+}
+
+void list_rules() {
+	for (int i = 0; i < MAX_RULES; ++i)
+		if (active_rules[i])
+			printf("%d %s\n", i, list_of_rules[i]);
+}
+
+void remove_rule(int rule_id) {
+	active_rules[rule_id] = 0;
+}
+
+void flush_rules() {
+	for (int i = 0; i < MAX_RULES; ++i)
+		active_rules[i] = 0;
 }
 
 int configure_can(char *name) {                 
@@ -72,5 +100,4 @@ void *monitor_can(void *args) {
         
         write(data->dst_id, &myFrame, sizeof(myFrame));
     }
-    exit(0);
 }
