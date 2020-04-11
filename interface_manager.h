@@ -3,7 +3,7 @@
 
 void vcan_init();
 void vcan_create(char *);
-void can_config(char *, char *);
-void canfd_config(char *, char *, char *);
+void can_config(char *, int);
+void canfd_config(char *, int, int);
 
 #endif //INTERFACE_MANAGER_H

@@ -4,35 +4,43 @@
 
 #include "interface_manager.h"
 
-void vcan_init() {
-	system("sudo modprobe vcan");
-	printf("sudo modprobe vcan \n");
-}
+static int VCAN_INIT = 0;
+
+void vcan_init();
 
 void vcan_create(char *name) {
 	char cmd[100];
 	
+	vcan_init();
+		
 	sprintf(cmd, "sudo ip link add %s type vcan", name);
 	system(cmd);
-	printf("%s \n", cmd);
+	//printf("%s \n", cmd);
 	
 	sprintf(cmd, "sudo ip link set up %s", name);
 	system(cmd);
-	printf("%s \n", cmd);
+	//printf("%s \n", cmd);
 }
 
-void can_config(char *name, char *bitrate) {
+void can_config(char *name, int bitrate) {
 	char cmd[100];
 	
-	sprintf(cmd, "sudo ip link set %s type can up bitrate %s", name, bitrate);
+	sprintf(cmd, "sudo ip link set %s type can up bitrate %d", name, bitrate);
 	system(cmd);
-	printf("%s \n", cmd);
+	//printf("%s \n", cmd);
 }
 
-void canfd_config(char *name, char *bitrate, char *dbitrate) {
+void canfd_config(char *name, int bitrate, int dbitrate) {
 	char cmd[100];
 	
-	sprintf(cmd, "sudo ip link set %s type can up bitrate %s dbitrate %s fd on", name, bitrate, dbitrate);
+	sprintf(cmd, "sudo ip link set %s type can up bitrate %d dbitrate %d fd on", name, bitrate, dbitrate);
 	system(cmd);
-	printf("%s \n", cmd);
+	//printf("%s \n", cmd);
+}
+
+void vcan_init() {
+	if (!VCAN_INIT) {
+		system("sudo modprobe vcan");
+		VCAN_INIT = 1;
+	}
 }
