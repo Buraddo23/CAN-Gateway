@@ -7,6 +7,10 @@
 #include "traffic_logger.h"
 
 int opt_to_int(char *);
+
+void can_setup();
+void vcan_cfg();
+
 void menu_add_rule();
 void menu_remove_rule();
 
@@ -28,12 +32,6 @@ void interactive_menu() {
 			break;
 		case setup:
 			curr_state = menu_setup();
-			break;
-		case can_setup:
-			curr_state = menu_can_setup();
-			break;
-		case vcan_cfg:
-			curr_state = menu_vcan_cfg();
 			break;
 		case main_menu:
 			curr_state = menu_main();
@@ -57,6 +55,7 @@ enum program_states menu_start() {
 	do {
 		printf("Do you want to setup CAN interfaces? (y/n)\n");
 		scanf("%3s", opt);
+		while ((getchar()) != '\n');
 	} while (opt_to_int(opt) == -1);
 	
 	if (opt_to_int(opt))
@@ -66,61 +65,79 @@ enum program_states menu_start() {
 }
 
 enum program_states menu_setup() {
-	int n;
+	char opt[4];
 	do {
-		printf("Select type: \n");
-		printf("1. Hardware CAN\n");
-		printf("2. Virtual CAN\n");
-		printf("0. Setup done\n");
-		scanf("%d", &n);
-		printf("%d", n!=2);
-	} while (n != 1 && n != 2 && n != 0);
-	
-	if (n == 1)
-		return can_setup;
-	else if (n == 2)
-		return vcan_cfg;
-	else if (n == 0)
-		return main_menu;
-}
-
-enum program_states menu_can_setup() {
-	char name[5], opt[4];
-	int br;
-	printf("CAN interface name: ");
-	scanf("%4s", name);
-	printf("Bitrate: ");
-	scanf("%d", &br);
-	do {
-		printf("Do you want CAN-FD? (y/n)\n");
+		printf("Get config from file? (y/n)\n");
 		scanf("%3s", opt);
+		while ((getchar()) != '\n');
 	} while (opt_to_int(opt) == -1);
+	
 	if (opt_to_int(opt)) {
-		int dbr;
-		printf("Dbitrate: ");
-		scanf("%d", &dbr);
+		FILE *f;
+		int if_n;
 		
-		canfd_config(name, br, dbr);
+		printf("Model for configuration file model.cfg");
+		do {
+			char filename[255];
+			printf("\nGive name for config file\n");
+			scanf("%s", filename);
+			while ((getchar()) != '\n');
+			
+			f = fopen(filename, "r");
+			
+			if (f == NULL) printf("Couldn't open file");
+		} while (f == NULL);
+		
+		fscanf(f, "%d", &if_n);		
+		for (int i = 0; i < if_n; ++i) {
+			char type[6];
+			fscanf(f, "%5s", type);
+			if (!strcmp(type, "can")) {
+				char name[5];
+				int br;
+				fscanf(f, "%s %d", name, &br);
+				can_config(name, br);
+			} else if (!strcmp(type, "canfd")) {
+				char name[5];
+				int br, dbr;
+				fscanf(f, "%s %d %d", name, &br, &dbr);
+				canfd_config(name, br, dbr);
+			} else if (!strcmp(type, "vcan")) {
+				char name[6];
+				fscanf(f, "%s", name);
+				vcan_create(name);
+			} else {
+				printf("Invalid data in file");
+			}
+		}
 	} else {
-		can_config(name, br);
+		int if_n;
+		printf("Number of interfaces: ");
+		scanf("%d", &if_n);
+		for (int i = 0; i < if_n; ++i) {
+			printf("Manual input for interfaces\n");			
+			
+			int n;
+			do {
+				printf("\nSelect type for interface no. %d: \n", i);
+				printf("1. Hardware CAN\n");
+				printf("2. Virtual CAN\n");
+				scanf("%d", &n);
+			} while (n != 1 && n != 2 && n != 0);
+			
+			if (n == 1)
+				can_setup();
+			else if (n == 2)
+				vcan_cfg();
+		}
 	}
-	return setup;
-}
-
-enum program_states menu_vcan_cfg() {
-	char name[6];
-	printf("VCAN interface name: ");
-	scanf("%5s", name);
-	
-	vcan_create(name);
-	
-	return setup;
+	return main_menu;
 }
 
 enum program_states menu_main() {
 	int n;
 	do {
-		printf("1. Add/remove/list rules\n");
+		printf("\n1. Add/remove/list rules\n");
 		printf("2. Print frame traffic\n");
 		printf("0. Exit program\n");
 		scanf("%d", &n);
@@ -137,7 +154,7 @@ enum program_states menu_main() {
 enum program_states menu_rule_wiz() {
 	int n;
 	do {
-		printf("1. Add a rule\n");
+		printf("\n1. Add a rule\n");
 		printf("2. List all rules\n");
 		printf("3. Remove rule\n");
 		printf("4. Remove all rules\n");
@@ -150,7 +167,9 @@ enum program_states menu_rule_wiz() {
 		menu_add_rule();
 		return rule_wiz;
 	case 2:
-		list_rules();				
+		list_rules();
+		getchar();
+		getchar();	
 		return rule_wiz;
 	case 3:
 		menu_remove_rule();
@@ -173,16 +192,52 @@ int opt_to_int(char *opt) {
 	}
 }
 
+void can_setup() {
+	char name[5], opt[4];
+	int br;
+	printf("CAN interface name: ");
+	scanf("%4s", name);
+	while ((getchar()) != '\n');
+	printf("Bitrate: ");
+	scanf("%d", &br);
+	do {
+		printf("Do you want CAN-FD? (y/n)\n");
+		scanf("%3s", opt);
+		while ((getchar()) != '\n');
+	} while (opt_to_int(opt) == -1);
+	if (opt_to_int(opt)) {
+		int dbr;
+		printf("Dbitrate: ");
+		scanf("%d", &dbr);
+		
+		canfd_config(name, br, dbr);
+	} else {
+		can_config(name, br);
+	}
+}
+
+void vcan_cfg() {
+	char name[6];
+	printf("VCAN interface name: ");
+	scanf("%5s", name);
+	while ((getchar()) != '\n');
+	
+	vcan_create(name);
+}
+
 void menu_add_rule() {
 	char s[6], d[6], opt[4];
 	
 	printf("Source: ");
 	scanf("%s", s);
+	while ((getchar()) != '\n');
 	printf("Destination: ");
 	scanf("%s", d);
+	while ((getchar()) != '\n');
 	do {
 		printf("Add filter? (y/n) \n");
 		scanf("%3s", opt);
+		while ((getchar()) != '\n');
 	} while (opt_to_int(opt) == -1);
 	if (opt_to_int(opt)) {
 		struct id_filter i_f;
@@ -197,6 +252,7 @@ void menu_add_rule() {
 		do {
 			printf("Matches (==)? (y/n) ");
 			scanf("%3s", o);
+			while ((getchar()) != '\n');
 		} while (opt_to_int(o) == -1);
 		i_f.is_match = opt_to_int(o);
 		

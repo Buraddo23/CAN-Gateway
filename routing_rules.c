@@ -62,6 +62,7 @@ int add_rule(char *src, char *dst) {
 }
 
 void list_rules() {
+	printf("\nActive rules: \n");
 	for (int i = 0; i < MAX_RULES; ++i)
 		if (active_rules[i])
 			printf("%d %s\n", i, list_of_rules[i]);
