@@ -3,6 +3,11 @@
 #include "traffic_logger.h"
 
 FILE *fptr;
+static int STDOUT = 0;
+
+void set_verbosity(int v) {
+	STDOUT = v;
+}
 
 void open_log() {
 	fptr = fopen("gw.log", "w");

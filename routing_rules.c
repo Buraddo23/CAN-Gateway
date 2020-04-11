@@ -19,7 +19,7 @@ int active_rules[MAX_RULES];
 
 struct monitor_data {
 	int src_id, dst_id, rule_id;
-	char *src_name, *dst_name;
+	char src_name[6], dst_name[6];
 	struct id_filter filter;
 };
 
@@ -46,8 +46,8 @@ int add_rule_filter(char *src, char *dst, struct id_filter filter) {
 	mon_args->src_id   = socket_src;
 	mon_args->dst_id   = socket_dst;
 	mon_args->rule_id  = rule_id;
-	mon_args->src_name = src;
-	mon_args->dst_name = dst;
+	strcpy(mon_args->src_name, src);
+	strcpy(mon_args->dst_name, dst);
 	mon_args->filter   = filter;
 	
 	int th_err = pthread_create(&monitor_thread, NULL, monitor_can, (void *)mon_args);
@@ -109,7 +109,7 @@ void *monitor_can(void *args) {
         if ((filter.is_match == -1) || //No filter
 		    (filter.is_match == 1) && ((filter.id & filter.mask) == (myFrame.can_id & filter.mask)) || //Equal filter
 		    (filter.is_match == 0) && ((filter.id & filter.mask) != (myFrame.can_id & filter.mask))) { //Not equal filter
-		
+			
 		    log_traffic(nbytes_rd, data->src_name, data->dst_name, myFrame, 0, filter.id, filter.mask, filter.is_match);
 		    
 		    write(data->dst_id, &myFrame, sizeof(myFrame));

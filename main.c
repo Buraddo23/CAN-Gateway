@@ -39,6 +39,13 @@ void interactive_menu() {
 		case rule_wiz:
 			curr_state = menu_rule_wiz();
 			break;
+		case print:
+			set_verbosity(1);
+			getchar();
+			getchar();
+			set_verbosity(0);
+			curr_state = main_menu;
+			break;			
 		case end:
 			main_loop = 0;
 			break;
@@ -77,16 +84,19 @@ enum program_states menu_setup() {
 		int if_n;
 		
 		printf("Model for configuration file model.cfg");
-		do {
-			char filename[255];
-			printf("\nGive name for config file\n");
-			scanf("%s", filename);
-			while ((getchar()) != '\n');
-			
-			f = fopen(filename, "r");
-			
-			if (f == NULL) printf("Couldn't open file");
-		} while (f == NULL);
+
+		char filename[255];
+		printf("\nGive name for config file\n");
+		scanf("%s", filename);
+		while ((getchar()) != '\n');
+		
+		f = fopen(filename, "r");
+		
+		if (f == NULL) {
+			printf("Couldn't open file\n");
+			getchar();
+			return menu_setup();
+		}
 		
 		fscanf(f, "%d", &if_n);		
 		for (int i = 0; i < if_n; ++i) {
@@ -107,16 +117,15 @@ enum program_states menu_setup() {
 				fscanf(f, "%s", name);
 				vcan_create(name);
 			} else {
-				printf("Invalid data in file");
+				printf("Invalid data in file\n");
 			}
 		}
 	} else {
 		int if_n;
+		printf("Manual input for interfaces\n");	
 		printf("Number of interfaces: ");
 		scanf("%d", &if_n);
-		for (int i = 0; i < if_n; ++i) {
-			printf("Manual input for interfaces\n");			
-			
+		for (int i = 0; i < if_n; ++i) {			
 			int n;
 			do {
 				printf("\nSelect type for interface no. %d: \n", i);

@@ -3,8 +3,7 @@
 
 #include <linux/can/raw.h>
 
-static int STDOUT = 0;
-
+void set_verbosity(int);
 void open_log();
 void log_traffic(int, char *, char *, struct can_frame, int, int, int, int);
 void close_log();
