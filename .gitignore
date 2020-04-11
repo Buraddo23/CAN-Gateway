@@ -2,3 +2,6 @@
 #*
 *.o
 gateway
+*.log
+*.cfg
+!model.cfg
